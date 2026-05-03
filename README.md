@@ -1,59 +1,174 @@
-# NgEcommerce
+# 🛒 Angular E-Commerce
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.9.
+A modern, fully-featured e-commerce web application built with Angular 19, leveraging standalone components, signals, and lazy loading.
 
-## Development server
+---
 
-To start a local development server, run:
+## 🚀 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Angular 19 |
+| Language | TypeScript |
+| Styling | SCSS |
+| State | Angular Signals |
+| HTTP | HttpClient |
+| Routing | Angular Router (lazy-loaded) |
+| API | [DummyJSON](https://dummyjson.com) |
+
+---
+
+## ✨ Features
+
+- 🏠 **Home Page** — Hero section, featured products, category highlights
+- 🛍️ **Products Listing** — Filter by category, search, pagination
+- 🔍 **Product Detail** — Images, description, rating, add to cart
+- 🛒 **Shopping Cart** — Add/remove/update items, persisted in localStorage
+- 💳 **Checkout** — Shipping address form, order summary
+- 📦 **Orders History** — View past orders and statuses
+- 🔐 **Auth** — Login & Register with route guards
+- 📱 **Responsive** — Mobile-first design
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── app/
+│   ├── core/
+│   │   ├── models/          # TypeScript interfaces (Product, Cart, User, Order)
+│   │   ├── services/        # ProductService, AuthService, CartService, OrderService
+│   │   ├── guards/          # authGuard, guestGuard
+│   │   └── interceptors/    # authInterceptor (JWT)
+│   ├── shared/
+│   │   ├── components/      # Navbar, Footer, ProductCard, Pagination, SearchBar
+│   │   ├── directives/      # Custom directives
+│   │   └── pipes/           # Custom pipes
+│   ├── features/
+│   │   ├── home/
+│   │   ├── products/
+│   │   ├── product-detail/
+│   │   ├── cart/
+│   │   ├── checkout/
+│   │   ├── orders/
+│   │   └── auth/
+│   │       ├── login/
+│   │       └── register/
+│   ├── app.routes.ts        # Lazy-loaded routes
+│   ├── app.config.ts        # App providers
+│   └── app.component.ts
+├── environments/
+│   ├── environment.ts
+│   └── environment.prod.ts
+└── styles.scss
+```
+
+---
+
+## ⚙️ Getting Started
+
+### Prerequisites
+
+- Node.js >= 18
+- npm >= 9
+- Angular CLI >= 19
+
+### Installation
 
 ```bash
+# Install Angular CLI globally
+npm install -g @angular/cli
+
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/ng-ecommerce.git
+cd ng-ecommerce
+
+# Install dependencies
+npm install
+
+# Start the dev server
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Open your browser at **http://localhost:4200**
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 📜 Available Scripts
 
 ```bash
-ng generate --help
+ng serve          # Start dev server
+ng build          # Production build → dist/
+ng build --watch  # Watch mode
+ng test           # Run unit tests
+ng generate component shared/components/my-component  # Generate a component
 ```
 
-## Building
+---
 
-To build the project run:
+## 🌐 Environment Configuration
+
+Edit `src/environments/environment.ts` to change the API base URL:
+
+```ts
+export const environment = {
+  production: false,
+  apiUrl: 'https://dummyjson.com',
+};
+```
+
+---
+
+## 🔐 Authentication
+
+The app uses JWT-based auth via [DummyJSON /auth/login](https://dummyjson.com/docs/auth).
+
+**Demo credentials:**
+```
+username: emilys
+password: emilyspass
+```
+
+The `authInterceptor` automatically attaches the token to every outgoing request.
+
+---
+
+## 🗺️ Routes
+
+| Path | Component | Guard |
+|------|-----------|-------|
+| `/` | HomeComponent | — |
+| `/products` | ProductsComponent | — |
+| `/products/:id` | ProductDetailComponent | — |
+| `/cart` | CartComponent | — |
+| `/checkout` | CheckoutComponent | `authGuard` |
+| `/orders` | OrdersComponent | `authGuard` |
+| `/auth/login` | LoginComponent | `guestGuard` |
+| `/auth/register` | RegisterComponent | `guestGuard` |
+
+---
+
+## 📦 Production Build
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Output is in `dist/ng-ecommerce/`. Deploy to any static hosting (Netlify, Vercel, Firebase Hosting, etc.).
 
-## Running unit tests
+---
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## 🤝 Contributing
 
-```bash
-ng test
-```
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feat/your-feature`
+3. Commit your changes: `git commit -m "feat: add your feature"`
+4. Push: `git push origin feat/your-feature`
+5. Open a Pull Request
 
-## Running end-to-end tests
+---
 
-For end-to-end (e2e) testing, run:
+## 📄 License
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+MIT License © 2025
