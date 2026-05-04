@@ -114,16 +114,13 @@ export class AppService {
             description: 'Retrieve all orders (Admin)',
           },
           {
-            path: '/orders',
+            path: '/orders/checkout',
             method: 'POST',
             body: {
               userId: 'string',
-              items: [
-                { productId: 'string', quantity: 'number', price: 'number' },
-              ],
-              totalAmount: 'number',
               shippingAddress: 'string',
             },
+            description: 'Convert user cart into a finalized order',
           },
           {
             path: '/orders/user/:userId',

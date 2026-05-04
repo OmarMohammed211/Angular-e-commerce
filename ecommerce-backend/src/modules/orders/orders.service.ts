@@ -3,8 +3,20 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { CartService } from '../cart/cart.service';
+
+interface PopulatedCartItem {
+  productId: {
+    _id: Types.ObjectId;
+    price: number;
+  };
+  quantity: number;
+}
+
+interface CartResponse {
+  userId: Types.ObjectId;
+  items: PopulatedCartItem[];
+}
 
 @Injectable()
 export class OrdersService {
@@ -13,22 +25,42 @@ export class OrdersService {
     private readonly cartService: CartService,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    const { userId, items, ...rest } = createOrderDto;
-    
+  async checkout(userId: string, shippingAddress: string): Promise<Order> {
+    // 1. Fetch user's cart
+    const cart = (await this.cartService.getCart(userId)) as unknown as CartResponse;
+    if (!cart || cart.items.length === 0) {
+      throw new NotFoundException('Cart is empty');
+    }
+
+    // 2. Prepare order items and calculate total
+    let totalAmount = 0;
+    const orderItems = cart.items.map(
+      (item) => {
+        const price = item.productId.price;
+        const quantity = item.quantity;
+        totalAmount += price * quantity;
+
+        return {
+          productId: item.productId._id,
+          quantity,
+          price, // Snapshot of current price
+        };
+      },
+    );
+
+    // 3. Create the order
     const orderData = {
-      ...rest,
       userId: new Types.ObjectId(userId),
-      items: items.map(item => ({
-        ...item,
-        productId: new Types.ObjectId(item.productId),
-      })),
+      items: orderItems,
+      totalAmount,
+      shippingAddress,
+      status: 'pending',
     };
 
     const createdOrder = new this.orderModel(orderData);
     const savedOrder = await createdOrder.save();
 
-    // Clear user's cart after order is placed
+    // 4. Clear the cart
     await this.cartService.emptyCart(userId);
 
     return savedOrder;
