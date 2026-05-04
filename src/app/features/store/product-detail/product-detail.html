@@ -1,0 +1,21 @@
+<div class="container">
+  @if (loading()) {
+    <div class="loader">Loading product details...</div>
+  } @else if (product(); as p) {
+    <div class="detail-layout">
+      <img [src]="p.thumbnail" [alt]="p.title" class="main-img">
+      <div class="info">
+        <nav><a routerLink="/products">← Back to Products</a></nav>
+        <h1>{{ p.title }}</h1>
+        <p class="meta">{{ p.brand }} | {{ p.category }}</p>
+        <p class="description">{{ p.description }}</p>
+        <div class="price-action">
+          <span class="price">{{ p.price | currency }}</span>
+          <button (click)="cartService.addToCart(p)" class="btn-buy">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="error">Product not found.</div>
+  }
+</div>
