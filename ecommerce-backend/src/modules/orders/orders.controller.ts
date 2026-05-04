@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')
@@ -31,5 +32,14 @@ export class OrdersController {
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.ordersService.updateStatus(id, status);
+  }
+
+  @Patch(':id/cancel')
+  cancelOrder(@Param('id') id: string) {
+    return this.ordersService.cancelOrder(id);
+  }
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.ordersService.remove(id);
   }
 }

@@ -19,34 +19,26 @@ export class CartService {
     // 1. Verify product exists
     await this.productsService.findOne(productId);
 
-    // 2. Find user's cart
-    let cart = await this.cartModel.findOne({ userId });
-
-    // Convert string IDs to ObjectId
     const productIdObj = new Types.ObjectId(productId);
     const userIdObj = new Types.ObjectId(userId);
 
-    if (!cart) {
-      cart = await this.cartModel.create({
-        userId: userIdObj,
-        items: [{ productId: productIdObj, quantity }],
-      });
-    } else {
-      const itemIndex = cart.items.findIndex(
-        (item) => item.productId.toString() === productId,
-      );
+    // atomic update: try to increment quantity if item exists
+    const result = await this.cartModel.findOneAndUpdate(
+      { userId: userIdObj, 'items.productId': productIdObj },
+      { $inc: { 'items.$.quantity': quantity } },
+      { new: true }
+    ).exec();
 
-      if (itemIndex > -1) {
-        cart.items[itemIndex].quantity += quantity;
-      } else {
-        // Push new item with ObjectId
-        cart.items.push({ productId: productIdObj, quantity });
-      }
-
-      await cart.save();
+    if (!result) {
+      // If item doesn't exist, push it or create cart
+      await this.cartModel.findOneAndUpdate(
+        { userId: userIdObj },
+        { $push: { items: { productId: productIdObj, quantity } } },
+        { upsert: true, new: true }
+      ).exec();
     }
 
-    return cart;
+    return this.getCart(userId);
   }
 
   async getCart(userId: string): Promise<Cart> {
@@ -63,15 +55,11 @@ export class CartService {
   }
 
   async removeItem(userId: string, productId: string): Promise<Cart> {
-    const cart = await this.cartModel.findOne({ userId });
+    await this.cartModel.findOneAndUpdate(
+      { userId },
+      { $pull: { items: { productId: new Types.ObjectId(productId) } } }
+    ).exec();
 
-    if (!cart) throw new NotFoundException('Cart not found');
-
-    cart.items = cart.items.filter(
-      (item) => item.productId.toString() !== productId,
-    );
-
-    await cart.save();
     return this.getCart(userId); // Return populated cart
   }
 

@@ -1,9 +1,10 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { CartService } from '../cart/cart.service';
+import { ProductsService } from '../products/products.service';
 
 interface PopulatedCartItem {
   productId: {
@@ -18,11 +19,25 @@ interface CartResponse {
   items: PopulatedCartItem[];
 }
 
+interface LocalOrderItem {
+  productId: Types.ObjectId;
+  quantity: number;
+  price: number;
+}
+
 @Injectable()
 export class OrdersService {
+  async remove(id: string) {
+    const order = await this.orderModel.findByIdAndDelete(id).exec();
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return order;
+  }
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
     private readonly cartService: CartService,
+    private readonly productsService: ProductsService,
   ) {}
 
   async checkout(userId: string, shippingAddress: string): Promise<Order> {
@@ -32,21 +47,36 @@ export class OrdersService {
       throw new NotFoundException('Cart is empty');
     }
 
-    // 2. Prepare order items and calculate total
+    // 2. Prepare order items, calculate total, and CHECK STOCK (Optimized with Batch Fetching)
+    const productIds = cart.items.map(item => item.productId._id.toString());
+    const products = await this.productsService.findMany(productIds);
+    
+    const productMap = new Map(products.map(p => [(p as { _id: Types.ObjectId })._id.toString(), p]));
+    
     let totalAmount = 0;
-    const orderItems = cart.items.map(
-      (item) => {
-        const price = item.productId.price;
-        const quantity = item.quantity;
-        totalAmount += price * quantity;
+    const orderItems: LocalOrderItem[] = [];
 
-        return {
-          productId: item.productId._id,
-          quantity,
-          price, // Snapshot of current price
-        };
-      },
-    );
+    for (const item of cart.items) {
+      const product = productMap.get(item.productId._id.toString());
+      
+      if (!product) {
+        throw new NotFoundException(`Product not found: ${item.productId._id.toString()}`);
+      }
+
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(`Insufficient stock for product: ${product.name}`);
+      }
+
+      const price = product.price;
+      const quantity = item.quantity;
+      totalAmount += price * quantity;
+
+      orderItems.push({
+        productId: item.productId._id,
+        quantity,
+        price,
+      });
+    }
 
     // 3. Create the order
     const orderData = {
@@ -60,10 +90,32 @@ export class OrdersService {
     const createdOrder = new this.orderModel(orderData);
     const savedOrder = await createdOrder.save();
 
-    // 4. Clear the cart
+    // 4. DECREMENT STOCK for each item
+    for (const item of orderItems) {
+      await this.productsService.updateStock(item.productId.toString(), -item.quantity);
+    }
+
+    // 5. Clear the cart
     await this.cartService.emptyCart(userId);
 
     return savedOrder;
+  }
+
+  async cancelOrder(id: string): Promise<Order> {
+    const order = await this.orderModel.findById(id);
+    if (!order) throw new NotFoundException('Order not found');
+    
+    if (order.status === 'cancelled') {
+      throw new BadRequestException('Order is already cancelled');
+    }
+
+    // Restore stock
+    for (const item of order.items) {
+      await this.productsService.updateStock(item.productId.toString(), item.quantity);
+    }
+
+    order.status = 'cancelled';
+    return await order.save();
   }
 
   async findAll(): Promise<Order[]> {
