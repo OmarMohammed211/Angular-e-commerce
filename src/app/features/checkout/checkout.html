@@ -1,0 +1,89 @@
+<main id="main-content" tabindex="-1" class="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8 focus:outline-none">
+  <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 mb-8">Checkout</h1>
+
+  <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()"
+    class="bg-white p-6 sm:p-8 rounded-lg shadow-sm border border-gray-200">
+
+    <!-- Contact Information -->
+    <div class="mb-8">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Contact information</h2>
+      <div>
+        <label for="email-address" class="block text-sm font-medium text-gray-700">Email address</label>
+        <div class="mt-1">
+          <input type="email" id="email-address" formControlName="email" autocomplete="email"
+            class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2 border transition-colors"
+            [class.border-red-500]="isInvalid('email')" [class.focus:ring-red-500]="isInvalid('email')"
+            [attr.aria-invalid]="isInvalid('email')">
+        </div>
+        @if (isInvalid('email')) {
+        <p class="mt-2 text-sm text-red-600" id="email-error">Please enter a valid email address.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="mb-8">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Shipping address</h2>
+      <div class="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+        <div class="sm:col-span-2">
+          <label for="name" class="block text-sm font-medium text-gray-700">Full name</label>
+          <div class="mt-1">
+            <input type="text" id="name" formControlName="name" autocomplete="name"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2 border"
+              [class.border-red-500]="isInvalid('name')">
+          </div>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label for="address" class="block text-sm font-medium text-gray-700">Street address</label>
+          <div class="mt-1">
+            <input type="text" id="address" formControlName="address" autocomplete="street-address"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2 border"
+              [class.border-red-500]="isInvalid('address')">
+          </div>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label for="city" class="block text-sm font-medium text-gray-700">City</label>
+          <div class="mt-1">
+            <input type="text" id="city" formControlName="city" autocomplete="address-level2"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2 border"
+              [class.border-red-500]="isInvalid('city')">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Details -->
+    <div class="mb-8 border-t border-gray-200 pt-8">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Payment details</h2>
+      <div>
+        <label for="card-number" class="block text-sm font-medium text-gray-700">Card number</label>
+        <div class="mt-1">
+          <input type="text" id="card-number" formControlName="cardNumber" autocomplete="cc-number"
+            placeholder="0000 0000 0000 0000"
+            class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2 border"
+            [class.border-red-500]="isInvalid('cardNumber')">
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="border-t border-gray-200 pt-6">
+      <button type="submit" [disabled]="isSubmitting()"
+        class="w-full bg-blue-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed flex justify-center items-center transition-all">
+        @if (isSubmitting()) {
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
+        </svg>
+        Processing...
+        } @else {
+        Pay and complete order
+        }
+      </button>
+    </div>
+  </form>
+</main>
