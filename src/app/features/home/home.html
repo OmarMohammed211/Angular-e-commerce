@@ -1,12 +1,50 @@
-<!-- Accessibility: Using standard landmarks and semantic HTML -->
-<main id="main-content" tabindex="-1">
-  <section aria-labelledby="hero-heading">
-    <h1 id="hero-heading">Welcome to the Store</h1>
-    <p>Discover the latest products and offers.</p>
+<main id="main-content" tabindex="-1" class="focus:outline-none">
+  <!-- Hero Section -->
+  <section aria-labelledby="hero-heading"
+    class="bg-gray-50 py-20 px-4 sm:px-6 lg:px-8 text-center border-b border-gray-200">
+    <h1 id="hero-heading" class="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+      Welcome to the <span class="text-blue-600">Store</span>
+    </h1>
+    <p class="mt-4 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+      Discover the latest products, exclusive offers, and tech gear tailored for your setup.
+    </p>
+    <div class="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+      <div class="rounded-md shadow">
+        <!-- Accessibility: High contrast, distinct focus ring -->
+        <a href="/products"
+          class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 md:py-4 md:text-lg transition-colors">
+          Shop Now
+        </a>
+      </div>
+    </div>
+  </section>
 
-    <!-- Placeholder for featured products component -->
-    <div class="featured-products-container">
-      <!-- <app-product-card /> -->
+  <!-- Featured Products Section -->
+  <section aria-labelledby="featured-heading" class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <h2 id="featured-heading" class="text-2xl font-extrabold text-gray-900 tracking-tight">Featured Products</h2>
+
+    <div class="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+      <!-- Placeholder Product Card (To be extracted to app-product-card later) -->
+      <article
+        class="group relative flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+        <div class="aspect-w-1 aspect-h-1 bg-gray-200 group-hover:opacity-75 sm:aspect-none sm:h-64">
+          <!-- Placeholder for NgOptimizedImage -->
+          <div class="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-medium">Image
+            Placeholder</div>
+        </div>
+        <div class="flex-1 p-4 space-y-2 flex flex-col">
+          <h3 class="text-sm font-medium text-gray-900">
+            <a href="#" class="focus:outline-none focus:underline rounded-sm">
+              <span aria-hidden="true" class="absolute inset-0"></span>
+              Wireless Headphones
+            </a>
+          </h3>
+          <p class="text-sm text-gray-500 line-clamp-2">High-quality noise-canceling headphones for your daily commute.
+          </p>
+          <div class="flex-1"></div>
+          <p class="text-base font-medium text-gray-900">$199.99</p>
+        </div>
+      </article>
     </div>
   </section>
 </main>

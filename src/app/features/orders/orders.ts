@@ -1,7 +1,7 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit } from '@angular/core';
 
 // Temporary interface until the core/models are fully established
-interface OrderPlaceholder {
+interface Order {
   id: string;
   date: string;
   total: number;
@@ -16,9 +16,20 @@ interface OrderPlaceholder {
   imports: []
 })
 export class Orders {
-  // Signals for state management, ready for the Data Lead to wire up to an OrderService
-  readonly orders = signal<OrderPlaceholder[]>([]);
-  readonly isLoading = signal<boolean>(false);
+  readonly orders = signal<Order[]>([]);
+  readonly isLoading = signal<boolean>(true);
 
-  // readonly hasOrders = computed(() => this.orders().length > 0);
+  readonly hasOrders = computed(() => this.orders().length > 0);
+
+  ngOnInit() {
+    // Simulate API fetch delay to view the Tailwind loading spinner
+    setTimeout(() => {
+      this.orders.set([
+        { id: 'ORD-001', date: '2026-05-01', total: 129.99, status: 'completed' },
+        { id: 'ORD-002', date: '2026-05-04', total: 49.50, status: 'pending' },
+        { id: 'ORD-003', date: '2026-04-15', total: 89.00, status: 'cancelled' },
+      ]);
+      this.isLoading.set(false);
+    }, 1000);
+  }
 }

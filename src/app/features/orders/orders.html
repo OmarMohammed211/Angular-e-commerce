@@ -1,25 +1,78 @@
-<main id="main-content" tabindex="-1">
-  <h1 id="orders-heading">My Orders</h1>
+<main id="main-content" tabindex="-1" class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8 focus:outline-none">
+  <div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+      <h1 id="orders-heading" class="text-2xl font-semibold text-gray-900">My Orders</h1>
+      <p class="mt-2 text-sm text-gray-700">Check the status of recent orders, manage returns, and view invoices.</p>
+    </div>
+  </div>
 
-  @if (isLoading()) {
-  <!-- Accessibility: Polite aria-live region for loading states -->
-  <div aria-live="polite" aria-busy="true">Loading your order history...</div>
-  } @else {
-  <section aria-labelledby="orders-heading">
-    @if (!hasOrders()) {
-    <p>You currently have no orders.</p>
+  <div class="mt-8 flex flex-col">
+    @if (isLoading()) {
+    <!-- Accessible loading spinner -->
+    <div aria-live="polite" aria-busy="true" class="flex justify-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <span class="sr-only">Loading your order history...</span>
+    </div>
     } @else {
-    <ul class="order-list" role="list">
-      @for (order of orders(); track order.id) {
-      <li class="order-item">
-        <h2>Order #{{ order.id }}</h2>
-        <p>Date: {{ order.date }}</p>
-        <p>Total: ${{ order.total }}</p>
-        <p>Status: {{ order.status }}</p>
-      </li>
+    <section aria-labelledby="orders-heading">
+      @if (!hasOrders()) {
+      <!-- Empty State -->
+      <div class="text-center py-12 bg-white rounded-lg border border-gray-200 shadow-sm">
+        <p class="text-sm text-gray-500">You currently have no orders.</p>
+        <div class="mt-6">
+          <a href="/products"
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+            Start Shopping
+          </a>
+        </div>
+      </div>
+      } @else {
+      <!-- Orders Data Table -->
+      <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-300">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Order ID
+              </th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Total</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+              <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            @for (order of orders(); track order.id) {
+            <tr>
+              <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">#{{ order.id }}
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ order.date }}</td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">${{ order.total }}</td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm">
+
+                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5"
+                  [class.bg-green-100]="order.status === 'completed'"
+                  [class.text-green-800]="order.status === 'completed'"
+                  [class.bg-yellow-100]="order.status === 'pending'"
+                  [class.text-yellow-800]="order.status === 'pending'" [class.bg-red-100]="order.status === 'cancelled'"
+                  [class.text-red-800]="order.status === 'cancelled'">
+                  {{ order.status }}
+                </span>
+              </td>
+              <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                <button type="button"
+                  class="text-blue-600 hover:text-blue-900 focus:outline-none focus:underline rounded transition-colors">
+                  View<span class="sr-only">, details for order {{ order.id }}</span>
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
       }
-    </ul>
+    </section>
     }
-  </section>
-  }
+  </div>
 </main>
