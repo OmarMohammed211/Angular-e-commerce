@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
 
 interface CartItem {
   id: string;
@@ -13,7 +14,7 @@ interface CartItem {
   selector: 'app-cart',
   templateUrl: './cart.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink]
+  imports: [RouterLink, DecimalPipe]
 })
 export class Cart {
   // Dummy data for UI/UX Lead to style.
