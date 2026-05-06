@@ -1,0 +1,27 @@
+/* eslint-disable prettier/prettier */
+import { IsNotEmpty, IsNumber, IsString, Min, IsOptional } from 'class-validator';
+
+export class CreateProductDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsNumber()
+  @Min(0)
+  price: number;
+
+  @IsNumber()
+  @Min(0)
+  stock: number;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
+
+  @IsString()
+  @IsOptional()
+  categoryId?: string;
+}
