@@ -47,7 +47,6 @@ import { ProductService } from '../../core/services/product.service';
           <div class="flex items-center gap-3 sm:gap-5 lg:gap-10">
             <div class="hidden lg:flex items-center gap-6 text-[13px] font-medium text-[#3a3a35]">
               <a routerLink="/about" class="hover:opacity-60 transition-opacity">About</a>
-              <a href="#" class="hover:opacity-60 transition-opacity">العربية</a>
             </div>
             
             <div class="flex items-center gap-3 sm:gap-5">
