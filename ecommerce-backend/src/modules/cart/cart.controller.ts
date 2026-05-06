@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Body, Param } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 
@@ -10,7 +10,7 @@ export class CartController {
   @Post('add')
   async addItem(
     @Body() addToCartDto: AddToCartDto,
-    @Body('userId') userId: string, // Ideally comes from AuthGuard
+    @Body('userId') userId: string,
   ) {
     return this.cartService.addToCart(userId, addToCartDto);
   }
@@ -20,6 +20,15 @@ export class CartController {
     return this.cartService.getCart(userId);
   }
 
+  @Patch('update-quantity')
+  async updateQuantity(
+    @Body('userId') userId: string,
+    @Body('productId') productId: string,
+    @Body('quantity') quantity: number,
+  ) {
+    return this.cartService.updateItemQuantity(userId, productId, quantity);
+  }
+
   @Delete('remove/:userId/:productId')
   async removeItem(
     @Param('userId') userId: string,
@@ -27,4 +36,9 @@ export class CartController {
   ) {
     return this.cartService.removeItem(userId, productId);
   }
-}
+
+  @Delete('clear/:userId')
+  async clearCart(@Param('userId') userId: string) {
+    return this.cartService.emptyCart(userId);
+  }
+}

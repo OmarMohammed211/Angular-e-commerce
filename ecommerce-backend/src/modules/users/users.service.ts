@@ -26,6 +26,7 @@ export class UsersService {
       name,
       email,
       password: hashedPassword,
+      role: email.includes('admin') ? 'admin' : 'user'
     });
     return newUser.save();
   }
@@ -51,7 +52,7 @@ export class UsersService {
   // Update User Profile
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const updatedUser = await this.userModel
-      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .findByIdAndUpdate(id, updateUserDto, { returnDocument: 'after' })
       .select('-password')
       .exec();
 

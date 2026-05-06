@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product } from './schemas/products.schemas';
@@ -12,7 +12,7 @@ export class ProductsService {
     const updatedProduct = await this.productModel.findByIdAndUpdate(
       id,
       updateProductDto,
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     ).exec();
 
     if (!updatedProduct) {
@@ -32,7 +32,7 @@ export class ProductsService {
   }
   async findByCategory(categoryId: string): Promise<Product[]> {
     return await this.productModel.find({ categoryId })
-      .select('name price image stock description categoryId') // Explicit projection
+      .select('_id name price image stock description categoryId') // Explicit projection
       .lean()
       .exec();
   }
@@ -52,19 +52,40 @@ export class ProductsService {
           { description: regex },
         ],
       },
-    ).select('name price image stock description')
+    ).select('_id name price image stock description categoryId')
     .lean()
     .exec();
   }
 
-  async updateStock(productId: string, quantityChange: number): Promise<void> {
-    const product = await this.productModel.findById(productId);
+  async updateStock(productId: string, quantityChange: number): Promise<Product> {
+    if (quantityChange < 0) {
+      return this.decrementStock(productId, Math.abs(quantityChange));
+    }
+
+    const product = await this.productModel.findByIdAndUpdate(
+      productId,
+      { $inc: { stock: quantityChange } },
+      { returnDocument: 'after', runValidators: true },
+    ).exec();
+
     if (!product) throw new NotFoundException('Product not found');
-    
-    product.stock += quantityChange;
-    if (product.stock < 0) product.stock = 0; // Prevent negative stock
-    
-    await product.save();
+
+    return product;
+  }
+
+  async decrementStock(productId: string, quantity: number): Promise<Product> {
+    const product = await this.productModel.findOneAndUpdate(
+      { _id: productId, stock: { $gte: quantity } },
+      { $inc: { stock: -quantity } },
+      { returnDocument: 'after', runValidators: true },
+    ).exec();
+
+    if (product) return product;
+
+    const existingProduct = await this.productModel.findById(productId).lean().exec();
+    if (!existingProduct) throw new NotFoundException('Product not found');
+
+    throw new BadRequestException(`Insufficient stock for product: ${existingProduct.name}`);
   }
 
   async findRelated(productId: string): Promise<Product[]> {
@@ -83,9 +104,10 @@ export class ProductsService {
 
   async findAll(): Promise<Product[]> {
     return await this.productModel.find()
-      .select('name price image stock description')
+      .select('_id name price image stock description categoryId')
       .lean()
       .exec();
+
   }
 
   async findOne(id: string): Promise<Product> {

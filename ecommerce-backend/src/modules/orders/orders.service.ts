@@ -41,13 +41,13 @@ export class OrdersService {
   ) {}
 
   async checkout(userId: string, shippingAddress: string): Promise<Order> {
-    // 1. Fetch user's cart
+    // 1. Fetch user's cart from MongoDB
     const cart = (await this.cartService.getCart(userId)) as unknown as CartResponse;
     if (!cart || cart.items.length === 0) {
       throw new NotFoundException('Cart is empty');
     }
 
-    // 2. Prepare order items, calculate total, and CHECK STOCK (Optimized with Batch Fetching)
+    // 2. Prepare order items, calculate total, and CHECK STOCK
     const productIds = cart.items.map(item => item.productId._id.toString());
     const products = await this.productsService.findMany(productIds);
     
@@ -69,6 +69,10 @@ export class OrdersService {
 
       const price = product.price;
       const quantity = item.quantity;
+      if (quantity <= 0) {
+        throw new BadRequestException(`Invalid quantity for product: ${product.name}`);
+      }
+
       totalAmount += price * quantity;
 
       orderItems.push({
@@ -78,7 +82,24 @@ export class OrdersService {
       });
     }
 
-    // 3. Create the order
+    totalAmount = Math.round(totalAmount * 100) / 100;
+
+    // 3. Decrement stock atomically before saving the order.
+    // If saving fails, restore any stock changes below.
+    const decrementedItems: LocalOrderItem[] = [];
+    try {
+      for (const item of orderItems) {
+        await this.productsService.decrementStock(item.productId.toString(), item.quantity);
+        decrementedItems.push(item);
+      }
+    } catch (error) {
+      for (const item of decrementedItems) {
+        await this.productsService.updateStock(item.productId.toString(), item.quantity);
+      }
+      throw error;
+    }
+
+    // 4. Create the order using backend-calculated prices and total.
     const orderData = {
       userId: new Types.ObjectId(userId),
       items: orderItems,
@@ -87,12 +108,15 @@ export class OrdersService {
       status: 'pending',
     };
 
-    const createdOrder = new this.orderModel(orderData);
-    const savedOrder = await createdOrder.save();
-
-    // 4. DECREMENT STOCK for each item
-    for (const item of orderItems) {
-      await this.productsService.updateStock(item.productId.toString(), -item.quantity);
+    let savedOrder!: Order;
+    try {
+      const createdOrder = new this.orderModel(orderData);
+      savedOrder = await createdOrder.save();
+    } catch (error) {
+      for (const item of decrementedItems) {
+        await this.productsService.updateStock(item.productId.toString(), item.quantity);
+      }
+      throw error;
     }
 
     // 5. Clear the cart
@@ -100,6 +124,7 @@ export class OrdersService {
 
     return savedOrder;
   }
+
 
   async cancelOrder(id: string): Promise<Order> {
     const order = await this.orderModel.findById(id);
@@ -146,10 +171,23 @@ export class OrdersService {
   }
 
   async updateStatus(id: string, status: string): Promise<Order> {
+    if (status === 'cancelled') {
+      return this.cancelOrder(id);
+    }
+
+    const currentOrder = await this.orderModel.findById(id).exec();
+    if (!currentOrder) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (currentOrder.status === 'cancelled') {
+      throw new BadRequestException('Cancelled orders cannot be reopened');
+    }
+
     const order = await this.orderModel.findByIdAndUpdate(
       id,
       { status },
-      { new: true },
+      { returnDocument: 'after' },
     ).exec();
     if (!order) {
       throw new NotFoundException('Order not found');

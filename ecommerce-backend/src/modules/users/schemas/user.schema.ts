@@ -16,11 +16,14 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop()
-  address: string; // New field for user profile
+  @Prop({ default: 'user' })
+  role: string;
 
   @Prop()
-  phone: string; // New field for user profile
+  address: string;
+
+  @Prop()
+  phone: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

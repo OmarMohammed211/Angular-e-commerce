@@ -1,3 +1,92 @@
 /* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  
+  --color-brand-primary: #bc8375; /* The terracotta button color */
+  --color-brand-primary-hover: #a56a5a;
+  --color-bg-main: #ffffff;
+  --color-bg-secondary: #fbf9f6; /* Warm off-white for sections */
+  --color-bg-card: #f2f1ec; /* Light cream/sage for product cards */
+  --color-text-main: #3a3a35;
+  --color-text-muted: #8c8c88;
+  --color-border: #e5e2dd;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-[var(--color-bg-main)] text-[var(--color-text-main)] selection:bg-[var(--color-brand-primary)] selection:text-white antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-serif {
+    font-family: var(--font-serif);
+    color: var(--color-text-main);
+  }
+
+  /* Elegant Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[var(--color-border)] rounded-full hover:bg-gray-400 transition-colors;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[var(--color-brand-primary)] text-white px-8 py-3.5 rounded-full font-semibold text-xs uppercase tracking-[0.2em] transition-all duration-300 hover:bg-[#a06b5d] hover:shadow-lg active:scale-95;
+  }
+
+  .btn-outline {
+    @apply border border-[var(--color-text-main)] bg-transparent text-[var(--color-text-main)] px-8 py-3.5 rounded-full font-semibold text-xs uppercase tracking-[0.2em] transition-all duration-300 hover:bg-[var(--color-text-main)] hover:text-white active:scale-95;
+  }
+  
+  .product-card-bg {
+    @apply bg-[var(--color-bg-card)] rounded-[2.5rem];
+  }
+
+  .nav-link {
+    @apply text-[13px] font-medium text-[#3a3a35] hover:text-[var(--color-brand-primary)] transition-colors duration-300;
+  }
+
+  .floating-whatsapp {
+    @apply fixed bottom-8 right-8 w-14 h-14 bg-[#25d366] text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-90 transition-all duration-300 z-[9999];
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Typography Utilities */
+
+.tracking-extrawide {
+  tracking-wider: 0.25em;
+}
+
+.font-light-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+}
+
+
+

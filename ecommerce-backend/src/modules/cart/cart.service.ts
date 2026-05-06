@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Cart, CartDocument } from './schema/cart.schema';
@@ -16,17 +16,34 @@ export class CartService {
   async addToCart(userId: string, addToCartDto: AddToCartDto): Promise<Cart> {
     const { productId, quantity } = addToCartDto;
 
-    // 1. Verify product exists
-    await this.productsService.findOne(productId);
+    // 1. Verify product exists and check stock
+    const product = await this.productsService.findOne(productId);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
 
     const productIdObj = new Types.ObjectId(productId);
     const userIdObj = new Types.ObjectId(userId);
+
+    // Get current cart to check existing quantity
+    const cart = await this.cartModel.findOne({ userId: userIdObj });
+    let currentQuantity = 0;
+    if (cart) {
+      const existingItem = cart.items.find(item => item.productId.toString() === productId);
+      if (existingItem) {
+        currentQuantity = existingItem.quantity;
+      }
+    }
+
+    if (currentQuantity + quantity > product.stock) {
+      throw new BadRequestException(`Cannot add to cart. Only ${product.stock} items available in stock.`);
+    }
 
     // atomic update: try to increment quantity if item exists
     const result = await this.cartModel.findOneAndUpdate(
       { userId: userIdObj, 'items.productId': productIdObj },
       { $inc: { 'items.$.quantity': quantity } },
-      { new: true }
+      { returnDocument: 'after' }
     ).exec();
 
     if (!result) {
@@ -34,7 +51,7 @@ export class CartService {
       await this.cartModel.findOneAndUpdate(
         { userId: userIdObj },
         { $push: { items: { productId: productIdObj, quantity } } },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       ).exec();
     }
 
@@ -43,8 +60,8 @@ export class CartService {
 
   async getCart(userId: string): Promise<Cart> {
     const cart = await this.cartModel
-      .findOne({ userId })
-      .populate('items.productId', 'name price image')
+      .findOne({ userId: new Types.ObjectId(userId) })
+      .populate('items.productId', 'name price image description stock')
       .lean()
       .exec();
 
@@ -56,7 +73,7 @@ export class CartService {
 
   async removeItem(userId: string, productId: string): Promise<Cart> {
     await this.cartModel.findOneAndUpdate(
-      { userId },
+      { userId: new Types.ObjectId(userId) },
       { $pull: { items: { productId: new Types.ObjectId(productId) } } }
     ).exec();
 
@@ -65,9 +82,9 @@ export class CartService {
 
   async emptyCart(userId: string): Promise<Cart> {
     const cart = await this.cartModel.findOneAndUpdate(
-      { userId },
+      { userId: new Types.ObjectId(userId) },
       { $set: { items: [] } },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!cart) {
@@ -83,7 +100,7 @@ export class CartService {
   productId: string,
   newQuantity: number,
 ): Promise<Cart> {
-  const cart = await this.cartModel.findOne({ userId });
+  const cart = await this.cartModel.findOne({ userId: new Types.ObjectId(userId) });
 
   if (!cart) throw new NotFoundException('Cart not found');
 
@@ -98,6 +115,16 @@ export class CartService {
   if (newQuantity <= 0) {
     // If quantity is zero or less, remove the item
     return this.removeItem(userId, productId);
+  }
+
+  // Check stock
+  const product = await this.productsService.findOne(productId);
+  if (!product) {
+    throw new NotFoundException('Product not found');
+  }
+
+  if (newQuantity > product.stock) {
+    throw new BadRequestException(`Cannot update quantity. Only ${product.stock} items available in stock.`);
   }
 
   // Update the quantity
